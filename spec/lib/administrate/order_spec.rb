@@ -81,6 +81,28 @@ describe Administrate::Order do
         expect(ordered).to eq(relation)
       end
     end
+
+    context "when sorting attribute from joins table" do
+      let(:attribute) { :name }
+      let(:options) { { sortable_table: 'join_table'} }
+      let(:dashboard) { double(:dashboard, options: options) }
+      let(:relation) do double(:relation,
+          klass: double(reflect_on_association: nil)
+        )
+      end
+
+      it "order using the joined table" do
+        order = Administrate::Order.new(attribute, nil, dashboard)
+        allow(dashboard).to receive(:attribute_type_for).with(:name).and_return(dashboard)
+        allow(relation).to receive(:reorder).and_return(relation)
+        allow(relation).to receive(:joins).with(:join_table).and_return(relation)
+
+        ordered = order.apply(relation)
+
+        expect(relation).to have_received(:reorder).with("join_table.name asc")
+        expect(ordered).to eq(relation)
+      end
+    end
   end
 
   describe "#ordered_by?" do
